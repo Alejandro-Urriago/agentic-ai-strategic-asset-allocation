@@ -1,0 +1,22 @@
+{
+  "source_id": "fact_investment_strategic_allocation",
+  "target_table": "bronze_fact_investment_strategic_allocation",
+  "pipeline_group": "apra",
+  "owner": "alejandro",
+  "description": "Board-approved SAA target allocation % by date, fund, option and asset class (APRA QSPS Historical SAA). Not actual holdings.",
+  "path": "fact_investment_strategic_allocation",
+  "format": "csv",
+  "options": {
+    "header": "true",
+    "rescuedDataColumn": "_rescued_data"
+  },
+  "expectations": {
+    "date_key_present": "date_key IS NOT NULL",
+    "fund_key_present": "fund_key IS NOT NULL",
+    "option_key_present": "investment_option_key IS NOT NULL",
+    "asset_class_key_present": "asset_class_key IS NOT NULL",
+    "pct_is_numeric_or_null": "benchmark_allocation_pct IS NULL OR try_cast(benchmark_allocation_pct AS DOUBLE) IS NOT NULL",
+    "no_rescued_data": "_rescued_data IS NULL"
+  },
+  "enabled": true
+}

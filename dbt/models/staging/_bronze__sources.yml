@@ -1,0 +1,31 @@
+version: 2
+
+# Bronze tables are produced by the SDP pipeline (analysis/bronze_pipeline).
+# dbt reads them as sources; silver and gold are dbt models.
+sources:
+  - name: bronze
+    database: "{{ var('bronze_catalog', 'adb_alejandro_research_dev_aue_ws') }}"
+    schema: "{{ var('bronze_schema', 'bronze') }}"
+    description: Modelled APRA CSVs loaded by Auto Loader. All business columns are strings.
+    loaded_at_field: _ingested_at
+    freshness:   # APRA publishes quarterly
+      warn_after: {count: 100, period: day}
+      error_after: {count: 130, period: day}
+    tables:
+      - name: bronze_dim_fund
+        columns:
+          - name: fund_key
+            tests: [not_null]
+      - name: bronze_dim_investment_option
+        columns:
+          - name: investment_option_key
+            tests: [not_null]
+      - name: bronze_dim_asset_class
+        columns:
+          - name: asset_class_key
+            tests: [not_null]
+      - name: bronze_fact_investment_strategic_allocation
+        description: SAA target weights (not actual holdings).
+        columns:
+          - name: investment_option_key
+            tests: [not_null]

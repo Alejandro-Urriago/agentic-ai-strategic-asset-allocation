@@ -1,0 +1,20 @@
+{
+  "source_id": "dim_investment_option",
+  "target_table": "bronze_dim_investment_option",
+  "pipeline_group": "apra",
+  "owner": "alejandro",
+  "description": "Largest investment option per fund per risk profile (from QSPS Tables 8a-8d member assets).",
+  "path": "dim_investment_option",
+  "format": "csv",
+  "options": {
+    "header": "true",
+    "rescuedDataColumn": "_rescued_data"
+  },
+  "expectations": {
+    "option_key_present": "investment_option_key IS NOT NULL",
+    "fund_key_present": "fund_key IS NOT NULL",
+    "risk_profile_present": "risk_profile IS NOT NULL",
+    "no_rescued_data": "_rescued_data IS NULL"
+  },
+  "enabled": true
+}
