@@ -1,0 +1,36 @@
+version: 2
+
+# Silver tables: clean copies of the bronze tables (correct data types, no duplicates).
+# Each table is checked so its key is never empty and never repeated.
+models:
+  - name: stg_dim_fund
+    description: One row per superannuation fund.
+    columns:
+      - name: fund_key
+        data_tests: [not_null, unique]
+
+  - name: stg_dim_investment_option
+    description: One row per investment option (the largest option per fund and risk profile).
+    columns:
+      - name: investment_option_key
+        data_tests: [not_null, unique]
+
+  - name: stg_dim_asset_class
+    description: One row per asset class.
+    columns:
+      - name: asset_class_key
+        data_tests: [not_null, unique]
+
+  - name: stg_fact_investment_strategic_allocation
+    description: Strategic asset allocation targets (not actual holdings). One row per date, investment option and asset class.
+    data_tests:
+      - unique:   # the combination of date, option and asset class is never repeated
+          arguments:
+            column_name: "concat_ws('|', cast(date_key as string), cast(investment_option_key as string), cast(asset_class_key as string))"
+    columns:
+      - name: date_key
+        data_tests: [not_null]
+      - name: investment_option_key
+        data_tests: [not_null]
+      - name: asset_class_key
+        data_tests: [not_null]
