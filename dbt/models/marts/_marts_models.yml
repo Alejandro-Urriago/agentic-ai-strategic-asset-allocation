@@ -1,0 +1,119 @@
+version: 2
+
+# Gold tables: the business tables Genie and the AI agent answer questions from.
+# Descriptions are copied into Databricks (Unity Catalog), so Genie can read them.
+models:
+  - name: dim_fund
+    description: Superannuation funds compared in the project. One row per fund.
+    columns:
+      - name: fund_key
+        description: Unique ID of the fund.
+        data_tests: [not_null, unique]
+      - name: rse_abn
+        description: Australian Business Number of the fund (RSE).
+      - name: fund_name
+        description: Full legal name of the fund.
+      - name: short_name
+        description: Short name used in reports.
+      - name: fund_type
+        description: "Fund type: Industry, Retail or Public_Sector."
+
+  - name: dim_investment_option
+    description: >
+      Investment options compared in the project: the largest option per fund and risk profile.
+      Compare options by risk_profile (based on asset mix), not by option name.
+    columns:
+      - name: investment_option_key
+        description: Unique ID of the investment option.
+        data_tests: [not_null, unique]
+      - name: investment_option_name
+        description: Name the fund gives the option. Not a reliable guide to risk.
+      - name: fund_key
+        description: Fund that offers the option.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_fund')
+                field: fund_key
+      - name: risk_profile
+        description: Risk group based on the share of growth assets (Conservative, Balanced, Growth, High growth).
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Conservative', 'Balanced', 'Growth', 'High growth']
+      - name: growth_assets_pct
+        description: Share of growth assets (shares, half of property and alternatives), as a fraction (0.7 = 70%).
+      - name: defensive_assets_pct
+        description: Share of defensive assets (cash, bonds, half of property and alternatives), as a fraction.
+      - name: total_member_assets
+        description: Total member money in the option, in Australian dollars (June 2026).
+
+  - name: dim_asset_class
+    description: Asset classes (cash, shares, property...). One row per asset class.
+    columns:
+      - name: asset_class_key
+        description: Unique ID of the asset class.
+        data_tests: [not_null, unique]
+      - name: sector_l1
+        description: Main sector used for comparisons, e.g. cash, fixed_income, equity.
+      - name: is_overlay
+        description: True for currency exposure. Excluded when checking that allocations add up to 100%.
+
+  - name: dim_date
+    description: Calendar, one row per day, covering every Australian financial year (1 July to 30 June) with data.
+    columns:
+      - name: date_key
+        description: The date.
+        data_tests: [not_null, unique]
+      - name: financial_year
+        description: Australian financial year, named by the year it ends (1 July 2025 to 30 June 2026 = 2026).
+      - name: financial_quarter
+        description: Quarter of the financial year (1 = July to September).
+      - name: is_quarter_end
+        description: True on the last day of each quarter (when APRA data is reported).
+
+  - name: fact_investment_strategic_allocation
+    description: >
+      Strategic asset allocation: each option's board-approved target mix, not actual holdings.
+      One row per date, investment option and asset class. Keeps all options;
+      join to dim_investment_option to compare the 40 selected options.
+    data_tests:
+      - unique:   # the combination of date, option and asset class is never repeated
+          arguments:
+            column_name: "concat_ws('|', cast(date_key as string), cast(investment_option_key as string), cast(asset_class_key as string))"
+    columns:
+      - name: date_key
+        description: Quarter-end date of the target.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_key
+      - name: fund_key
+        description: Fund that offers the option.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_fund')
+                field: fund_key
+      - name: investment_option_key
+        description: Investment option. Only 40 of the options are in dim_investment_option (by design).
+        data_tests: [not_null]
+      - name: asset_class_key
+        description: Asset class.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_asset_class')
+                field: asset_class_key
+      - name: benchmark_allocation_pct
+        description: Target share of the option in this asset class, as a fraction (0.25 = 25%).
+      - name: currency_hedging_ratio_pct
+        description: Share of the foreign currency exposure that is hedged, as a fraction.
+      - name: _ingested_at
+        description: When the row was loaded into Databricks (audit).
