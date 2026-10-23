@@ -1,4 +1,8 @@
--- Gold: asset classes (cash, shares, property...). One row per asset class.
+-- Gold: asset classes (cash, shares, property...).
+-- Current version of each asset class only (one row per asset class).
+-- A view on the history table asset_class_snapshot (SCD Type 2), so no data is copied.
+{{ config(materialized='view') }}
+
 select
     asset_class_key,
     asset_class_name,
@@ -13,5 +17,7 @@ select
     is_overlay,
     source_system,
     source_column,
-    saa_sector_type
-from {{ ref('stg_dim_asset_class') }}
+    saa_sector_type,
+    dbt_valid_from as valid_from
+from {{ ref('asset_class_snapshot') }}
+where dbt_valid_to is null   -- current version only; full history is in asset_class_snapshot
