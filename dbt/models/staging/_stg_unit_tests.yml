@@ -1,0 +1,21 @@
+# Unit test: checks that the silver fund table removes duplicate funds
+# and keeps the most recent version of each fund.
+# It uses made-up rows: fund 1 is loaded twice (old name, then new name), fund 2 once.
+# Expected result: one row per fund, with "New name" for fund 1.
+# Difference from the data test "unique": that one checks today's real data;
+# this one checks the code still works, so a future code change can't break it unnoticed.
+# Run during development and CI only, not in production (dbt Labs recommendation).
+unit_tests:
+  - name: stg_dim_fund_keeps_latest_load
+    description: If a fund is loaded twice, silver keeps only the most recent load.
+    model: stg_dim_fund
+    given:
+      - input: source('bronze', 'bronze_dim_fund')
+        rows:
+          - {fund_key: '1', fund_name: 'Old name', _ingested_at: '2026-01-01 00:00:00'}
+          - {fund_key: '1', fund_name: 'New name', _ingested_at: '2026-04-01 00:00:00'}
+          - {fund_key: '2', fund_name: 'Other fund', _ingested_at: '2026-01-01 00:00:00'}
+    expect:
+      rows:
+        - {fund_key: 1, fund_name: 'New name'}
+        - {fund_key: 2, fund_name: 'Other fund'}
