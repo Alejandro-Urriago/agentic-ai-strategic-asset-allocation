@@ -18,6 +18,6 @@ jobs:
         with:
           python-version: "3.12"
       - name: Validate source configs
-        run: python ingestion/jobs/sync_control_table.py --config-dir ingestion/config/sources --validate-only
+        run: python ingestion/jobs/update_control_table.py --config-dir ingestion/config/sources --validate-only
       - name: Compile Python
-        run: python -m py_compile ingestion/jobs/sync_control_table.py ingestion/transformations/bronze_ingest.py
+        run: python -m py_compile ingestion/jobs/update_control_table.py ingestion/transformations/bronze_ingest.py

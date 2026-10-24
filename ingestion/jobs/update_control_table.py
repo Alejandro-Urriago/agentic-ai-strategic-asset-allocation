@@ -1,11 +1,11 @@
-"""Sync per-source config files from Git into the bronze control table.
+"""Update the bronze control table from the per-source config files in Git.
 
 Git is the source of truth (one JSON file per source, reviewed via pull request).
-CI runs `--validate-only` on every PR; the deploy job runs the full sync, which
+CI runs `--validate-only` on every PR; the job runs the full update, which
 MERGEs the files into a Delta control table that the pipeline reads at runtime.
 
 Usage:
-  python sync_control_table.py --config-dir config/sources --validate-only
+  python update_control_table.py --config-dir config/sources --validate-only
   (Databricks job task) --config-dir ... --control-table main.control.bronze_sources --updated-by <git sha or CI user>
 """
 import argparse
@@ -30,6 +30,19 @@ REQUIRED = {
 }
 ALLOWED_FORMATS = {"csv", "json", "parquet", "avro", "orc", "text", "binaryFile", "xml"}
 IDENTIFIER = re.compile(r"^[a-z][a-z0-9_]*$")
+
+
+def resolve_config_dir(config_dir):
+    """Return the config folder path, whatever folder the job starts in.
+
+    A relative path (e.g. ingestion/config/sources) is read from the repo root.
+    The repo root is two folders up from this script (ingestion/jobs/).
+    """
+    if os.path.isabs(config_dir) or os.path.isdir(config_dir):
+        return config_dir
+    script = globals().get("__file__") or sys.argv[0]
+    repo_root = os.path.abspath(os.path.join(os.path.dirname(script), "..", ".."))
+    return os.path.join(repo_root, config_dir)
 
 
 def load_and_validate(config_dir):
@@ -78,7 +91,7 @@ def load_and_validate(config_dir):
     return sources
 
 
-def sync(spark, sources, control_table, updated_by):
+def update_control_table(spark, sources, control_table, updated_by):
     """MERGE configs into the control table. Removed files are disabled, never deleted."""
     spark.sql(f"""
         CREATE TABLE IF NOT EXISTS {control_table} (
@@ -97,7 +110,7 @@ def sync(spark, sources, control_table, updated_by):
           updated_at TIMESTAMP,
           updated_by STRING
         )
-        COMMENT 'Bronze ingestion control table. Synced from Git; do not edit except the enabled flag in emergencies.'
+        COMMENT 'Bronze ingestion control table. Updated from Git; do not edit except the enabled flag in emergencies.'
     """)
 
     staged = spark.createDataFrame(
@@ -156,7 +169,10 @@ def main():
     parser.add_argument("--validate-only", action="store_true")
     args = parser.parse_args()
 
-    sources = load_and_validate(args.config_dir)
+    config_dir = resolve_config_dir(args.config_dir)
+    print(f"Job started in folder: {os.getcwd()}")
+    print(f"Reading config files from: {config_dir}")
+    sources = load_and_validate(config_dir)
     print(f"{len(sources)} source configs valid")
     if args.validate_only:
         return
@@ -167,8 +183,8 @@ def main():
 
     from pyspark.sql import SparkSession
 
-    sync(SparkSession.builder.getOrCreate(), sources, args.control_table, args.updated_by)
-    print(f"Synced into {args.control_table}")
+    update_control_table(SparkSession.builder.getOrCreate(), sources, args.control_table, args.updated_by)
+    print(f"Updated {args.control_table}")
     if args.raw_root:
         create_landing_folders(sources, args.raw_root)
 
