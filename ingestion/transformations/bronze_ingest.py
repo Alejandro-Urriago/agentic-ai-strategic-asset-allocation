@@ -1,6 +1,6 @@
 """Metadata-driven bronze ingestion (Lakeflow Spark Declarative Pipelines).
 
-Reads the control table (synced from Git by jobs/sync_control_table.py) and
+Reads the control table (updated from Git by jobs/update_control_table.py) and
 registers one Auto Loader streaming table per enabled source in this
 pipeline's group. Adding a source = adding a config file in Git, no code change.
 
