@@ -1,31 +1,34 @@
 version: 2
 
-# Bronze tables are produced by the SDP pipeline (analysis/bronze_pipeline).
-# dbt reads them as sources; silver and gold are dbt models.
+# Bronze tables: raw copies of the 4 modelled CSV files, loaded by the
+# Databricks bronze_pipeline. dbt reads them here and builds silver and gold.
 sources:
   - name: bronze
-    database: "{{ var('bronze_catalog', 'adb_alejandro_research_dev_aue_ws') }}"
-    schema: "{{ var('bronze_schema', 'bronze') }}"
-    description: Modelled APRA CSVs loaded by Auto Loader. All business columns are strings.
-    loaded_at_field: _ingested_at
-    freshness:   # APRA publishes quarterly
-      warn_after: {count: 100, period: day}
-      error_after: {count: 130, period: day}
+    schema: bronze
+    description: Raw data loaded by the Databricks bronze pipeline. All business columns are text.
+    config:
+      loaded_at_field: _ingested_at   # when each row was loaded
+      freshness:                      # APRA data is quarterly
+        warn_after: {count: 100, period: day}
+        error_after: {count: 130, period: day}
     tables:
       - name: bronze_dim_fund
+        description: One row per superannuation fund.
         columns:
           - name: fund_key
-            tests: [not_null]
+            data_tests: [not_null]
       - name: bronze_dim_investment_option
+        description: One row per investment option (the largest option per fund and risk profile).
         columns:
           - name: investment_option_key
-            tests: [not_null]
+            data_tests: [not_null]
       - name: bronze_dim_asset_class
+        description: One row per asset class.
         columns:
           - name: asset_class_key
-            tests: [not_null]
+            data_tests: [not_null]
       - name: bronze_fact_investment_strategic_allocation
-        description: SAA target weights (not actual holdings).
+        description: Strategic asset allocation targets (not actual holdings), per option, asset class and date.
         columns:
           - name: investment_option_key
-            tests: [not_null]
+            data_tests: [not_null]

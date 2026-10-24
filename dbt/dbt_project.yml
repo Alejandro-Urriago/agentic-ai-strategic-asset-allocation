@@ -1,0 +1,24 @@
+# dbt project settings: name, folders, and how tables are built.
+name: agentic_ai_asset_allocation_project
+version: "1.0.0"
+profile: agentic_ai_asset_allocation_project  # connection to use (see profiles.yml)
+
+model-paths: ["models"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+seed-paths: ["seeds"]
+snapshot-paths: ["snapshots"]
+analysis-paths: ["analyses"]
+clean-targets: ["target", "dbt_packages"]
+
+models:
+  agentic_ai_asset_allocation_project:
+    +persist_docs:        # copy descriptions into Databricks
+      relation: true
+      columns: true
+    staging:
+      +materialized: view   # silver: views
+      +schema: silver       # production area (on the laptop: dev_alejandro)
+    marts:
+      +materialized: table  # gold: tables (the SCD Type 2 files override this with view)
+      +schema: gold         # production area (on the laptop: dev_alejandro)

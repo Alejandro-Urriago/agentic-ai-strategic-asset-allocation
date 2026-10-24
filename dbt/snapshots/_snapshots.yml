@@ -1,0 +1,105 @@
+# History of changes (SCD Type 2): dbt keeps every version of each row,
+# with dbt_valid_from / dbt_valid_to (empty = current version).
+# Each snapshot reads a silver table. A new version is saved only when one of
+# the listed business columns changes (strategy: check), because APRA files have
+# no reliable "last updated" column and a reloaded file changes the load time only.
+# Snapshots can't be rebuilt, so they live in their own schema: snapshots.
+# Checks (recommended by dbt): one current version per key, and no key has two
+# versions starting at the same moment.
+snapshots:
+  - name: fund_snapshot
+    relation: ref('stg_dim_fund')
+    description: Every version of each fund (history of changes).
+    config:
+      schema: snapshots
+      unique_key: fund_key
+      strategy: check
+      check_cols: [rse_abn, fund_name, short_name, fund_type]
+    columns:
+      - name: fund_key
+        data_tests:
+          - unique:   # only one current version per key
+              config:
+                where: "dbt_valid_to is null"
+    data_tests:
+      - unique:   # a key never has two versions starting at the same moment
+          arguments:
+            column_name: "concat_ws('|', cast(fund_key as string), cast(dbt_valid_from as string))"
+
+  - name: investment_option_snapshot
+    relation: ref('stg_dim_investment_option')
+    description: Every version of each investment option (history of changes).
+    config:
+      schema: snapshots
+      unique_key: investment_option_key
+      strategy: check
+      check_cols:
+        - investment_option_id
+        - investment_option_name
+        - investment_option_type
+        - investment_option_category
+        - fund_key
+        - risk_profile
+        - growth_assets_pct
+        - defensive_assets_pct
+        - total_member_assets
+    columns:
+      - name: investment_option_key
+        data_tests:
+          - unique:   # only one current version per key
+              config:
+                where: "dbt_valid_to is null"
+    data_tests:
+      - unique:   # a key never has two versions starting at the same moment
+          arguments:
+            column_name: "concat_ws('|', cast(investment_option_key as string), cast(dbt_valid_from as string))"
+
+  - name: asset_class_snapshot
+    relation: ref('stg_dim_asset_class')
+    description: Every version of each asset class (history of changes).
+    config:
+      schema: snapshots
+      unique_key: asset_class_key
+      strategy: check
+      check_cols:
+        - asset_class_name
+        - sector_l1
+        - sub_sector_l2
+        - listing_type
+        - domicile_type
+        - economy_type
+        - hedging_status
+        - measure_type
+        - parent_asset_class
+        - is_overlay
+        - source_system
+        - source_column
+        - saa_sector_type
+    columns:
+      - name: asset_class_key
+        data_tests:
+          - unique:   # only one current version per key
+              config:
+                where: "dbt_valid_to is null"
+    data_tests:
+      - unique:   # a key never has two versions starting at the same moment
+          arguments:
+            column_name: "concat_ws('|', cast(asset_class_key as string), cast(dbt_valid_from as string))"
+
+  - name: strategic_allocation_snapshot
+    relation: ref('stg_fact_investment_strategic_allocation')
+    description: Every version of each allocation target, including APRA corrections to past quarters.
+    config:
+      schema: snapshots
+      unique_key: [date_key, investment_option_key, asset_class_key]
+      strategy: check
+      check_cols: [fund_key, benchmark_allocation_pct, currency_hedging_ratio_pct]
+    data_tests:
+      - unique:   # only one current version per date, option and asset class
+          arguments:
+            column_name: "concat_ws('|', cast(date_key as string), cast(investment_option_key as string), cast(asset_class_key as string))"
+          config:
+            where: "dbt_valid_to is null"
+      - unique:   # a row never has two versions starting at the same moment
+          arguments:
+            column_name: "concat_ws('|', cast(date_key as string), cast(investment_option_key as string), cast(asset_class_key as string), cast(dbt_valid_from as string))"
