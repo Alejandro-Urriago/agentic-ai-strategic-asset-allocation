@@ -18,5 +18,7 @@ models:
       columns: true
     staging:
       +materialized: view   # silver: views
+      +schema: silver       # production area (on the laptop: dev_alejandro)
     marts:
-      +materialized: table  # gold: tables
+      +materialized: table  # gold: tables (the SCD Type 2 files override this with view)
+      +schema: gold         # production area (on the laptop: dev_alejandro)

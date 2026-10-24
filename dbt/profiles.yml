@@ -1,7 +1,8 @@
 # How dbt connects to Databricks.
-# No personal values here: they are read from dbt/.env (not on GitHub).
-# See dbt/.env.example for the values to fill in.
-# Sign-in is through the browser (OAuth); no password or token is stored.
+# dev:  your laptop. Personal values are read from dbt/.env (not on GitHub);
+#       see dbt/.env.example. Sign-in is through the browser (OAuth).
+# prod: the Databricks job. Databricks gives the job a temporary token
+#       (DBT_ACCESS_TOKEN) at run time, so no password is stored here.
 agentic_ai_asset_allocation_project:
   target: dev
   outputs:
@@ -12,4 +13,12 @@ agentic_ai_asset_allocation_project:
       catalog: "{{ env_var('DBT_CATALOG') }}"
       schema: "{{ env_var('DBT_SCHEMA') }}"
       auth_type: oauth
+      threads: 4
+    prod:
+      type: databricks
+      host: adb-7405611227701968.8.azuredatabricks.net
+      http_path: /sql/1.0/warehouses/e195161bd29c2350
+      catalog: adb_alejandro_research_dev_aue_ws
+      schema: gold        # default area; silver and snapshots are set per layer
+      token: "{{ env_var('DBT_ACCESS_TOKEN') }}"
       threads: 4
