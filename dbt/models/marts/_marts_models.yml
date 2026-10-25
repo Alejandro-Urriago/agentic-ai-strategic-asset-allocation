@@ -63,6 +63,18 @@ models:
         data_tests: [not_null, unique]
       - name: sector_l1
         description: Main sector used for comparisons, e.g. cash, fixed_income, equity.
+      - name: listing_type
+        description: >
+          listed, unlisted (private) or unspecified (fund did not say). Listed equity = sector_l1 'equity'
+          and listing_type <> 'unlisted', so unspecified is included.
+      - name: domicile_type
+        description: >
+          australian, international or unspecified (fund reported equity without an Australian/international split).
+          Show unspecified as its own group; never merge it into australian or international.
+      - name: economy_type
+        description: >
+          For international assets: developed, emerging or unspecified (fund did not split developed/emerging).
+          Show unspecified as its own group; never treat it as developed.
       - name: is_overlay
         description: True for currency exposure. Excluded when checking that allocations add up to 100%.
       - name: valid_from
