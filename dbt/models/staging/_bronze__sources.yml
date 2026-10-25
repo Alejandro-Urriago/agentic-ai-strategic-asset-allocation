@@ -18,7 +18,7 @@ sources:
           - name: fund_key
             data_tests: [not_null]
       - name: bronze_dim_investment_option
-        description: One row per investment option (the largest option per fund and risk profile).
+        description: One row per investment option (the largest diversified option per fund and risk profile).
         columns:
           - name: investment_option_key
             data_tests: [not_null]
@@ -31,4 +31,4 @@ sources:
         description: Strategic asset allocation targets (not actual holdings), per option, asset class and date.
         columns:
           - name: investment_option_key
-            data_tests: [not_null]
+            data_tests: [not_null]

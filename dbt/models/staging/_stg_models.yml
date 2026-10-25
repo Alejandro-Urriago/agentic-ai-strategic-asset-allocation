@@ -10,7 +10,7 @@ models:
         data_tests: [not_null, unique]
 
   - name: stg_dim_investment_option
-    description: One row per investment option (the largest option per fund and risk profile).
+    description: One row per investment option (the largest diversified option per fund and risk profile).
     columns:
       - name: investment_option_key
         data_tests: [not_null, unique]
@@ -33,4 +33,4 @@ models:
       - name: investment_option_key
         data_tests: [not_null]
       - name: asset_class_key
-        data_tests: [not_null]
+        data_tests: [not_null]

@@ -1,7 +1,7 @@
 {#
   Gold: metric view (semantic layer). Business definitions written once, used by Genie, Claude and dashboards.
   Built-in rules:
-  - Only the 40 compared options (inner join to dim_investment_option); currency overlay excluded.
+  - Only the compared options (inner join to dim_investment_option); currency overlay excluded.
   - Every % measure = average target per option and date, so options are never added together by mistake:
     one fund + one date gives that option's exact target; a risk profile + a year gives the simple average across funds.
   - Percentages are 0-100 (already multiplied by 100).
@@ -12,7 +12,7 @@
 
 version: 1.1
 comment: >
-  Strategic asset allocation (SAA) targets of the 40 compared investment options (largest option per fund and risk profile).
+  Strategic asset allocation (SAA) targets of the compared investment options (largest diversified option per fund and risk profile).
   Board-approved target allocations reported to APRA, not actual holdings. Percentages are 0-100.
   Compare funds within one risk profile. For one point per financial year, filter is_year_end_point = true.
 source: |

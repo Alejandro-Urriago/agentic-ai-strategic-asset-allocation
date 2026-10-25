@@ -4,6 +4,8 @@
 # the listed business columns changes (strategy: check), because APRA files have
 # no reliable "last updated" column and a reloaded file changes the load time only.
 # Snapshots can't be rebuilt, so they live in their own schema: snapshots.
+# hard_deletes: invalidate closes the history of a row that disappears from the source
+# (dbt_valid_to is set), instead of keeping it current forever.
 # Checks (recommended by dbt): one current version per key, and no key has two
 # versions starting at the same moment.
 snapshots:
@@ -28,11 +30,14 @@ snapshots:
 
   - name: investment_option_snapshot
     relation: ref('stg_dim_investment_option')
-    description: Every version of each investment option (history of changes).
+    description: >
+      Every version of each investment option (history of changes). An option that is
+      no longer compared keeps its history, with dbt_valid_to set when it was dropped.
     config:
       schema: snapshots
       unique_key: investment_option_key
       strategy: check
+      hard_deletes: invalidate
       check_cols:
         - investment_option_id
         - investment_option_name
@@ -102,4 +107,4 @@ snapshots:
             where: "dbt_valid_to is null"
       - unique:   # a row never has two versions starting at the same moment
           arguments:
-            column_name: "concat_ws('|', cast(date_key as string), cast(investment_option_key as string), cast(asset_class_key as string), cast(dbt_valid_from as string))"
+            column_name: "concat_ws('|', cast(date_key as string), cast(investment_option_key as string), cast(asset_class_key as string), cast(dbt_valid_from as string))"

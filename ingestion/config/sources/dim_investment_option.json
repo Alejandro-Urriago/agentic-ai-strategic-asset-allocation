@@ -3,7 +3,7 @@
   "target_table": "bronze_dim_investment_option",
   "pipeline_group": "apra",
   "owner": "alejandro",
-  "description": "Largest investment option per fund per risk profile (from QSPS Tables 8a-8d member assets).",
+  "description": "Largest diversified investment option per fund per risk profile (from QSPS Tables 8a-8d member assets). Each file is the full list; the latest file replaces the previous one.",
   "path": "dim_investment_option",
   "format": "csv",
   "options": {
