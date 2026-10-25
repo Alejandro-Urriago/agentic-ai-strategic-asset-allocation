@@ -23,7 +23,9 @@ models:
 
   - name: dim_investment_option
     description: >
-      Investment options compared in the project: the largest option per fund and risk profile.
+      Investment options compared in the project: the largest diversified option per fund and risk profile.
+      Diversified = holds shares and cash/bonds, so single-theme options (e.g. property only) are excluded.
+      A fund with no diversified option in a risk profile is not compared in that profile.
       Compare options by risk_profile (based on asset mix), not by option name.
     columns:
       - name: investment_option_key
@@ -97,7 +99,7 @@ models:
     description: >
       Strategic asset allocation: each option's board-approved target mix, not actual holdings.
       Latest value only: one row per date, investment option and asset class. Keeps all options;
-      join to dim_investment_option to compare the 40 selected options.
+      join to dim_investment_option to compare the selected options.
     data_tests:
       - unique:   # the combination of date, option and asset class is never repeated
           arguments:
@@ -120,7 +122,7 @@ models:
                 to: ref('dim_fund')
                 field: fund_key
       - name: investment_option_key
-        description: Investment option. Only 40 of the options are in dim_investment_option (by design).
+        description: Investment option. Only the compared options are in dim_investment_option (by design).
         data_tests: [not_null]
       - name: asset_class_key
         description: Asset class.
@@ -137,4 +139,4 @@ models:
       - name: _ingested_at
         description: When the row was loaded into Databricks (audit).
       - name: valid_from
-        description: Date this version of the target value became current. Earlier versions are in the snapshots schema.
+        description: Date this version of the target value became current. Earlier versions are in the snapshots schema.
