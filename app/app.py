@@ -135,7 +135,6 @@ header[data-testid="stHeader"] { background: transparent; }
 HEADER = """
 <div class="kicker"><span class="num">01</span>AUSTRALIAN SUPER FUNDS · APRA DATA</div>
 <div class="title">Strategic Asset Allocation, <span class="accent">Agentic AI</span></div>
-<div class="subtitle">ask in plain English, answered from live data</div>
 <div class="rule"></div>
 <div class="pipeline">
   <span class="chip">APRA FILES</span><span class="arrow">›</span>
