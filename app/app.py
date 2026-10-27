@@ -127,6 +127,7 @@ header[data-testid="stHeader"] { background: transparent; }
 .stButton button { width: 100%; text-align: left; background: transparent; border: 1px solid var(--line); color: var(--text);
                    border-radius: 12px; font-size: .85rem; padding: .55rem .8rem; }
 .stButton button:hover { border-color: var(--coral); color: #fff; }
+.stButton button[kind="primary"] { background: var(--coral); border-color: var(--coral); color: #fff; font-weight: 600; margin-bottom: 1rem; }
 </style>
 """
 
@@ -275,6 +276,9 @@ if st.secrets.get("APP_PASSWORD") and not st.session_state.get("signed_in"):
     st.stop()
 
 with st.sidebar:
+    if st.button("＋ New chat", key="new_chat", type="primary"):
+        st.session_state.history = []
+        st.rerun()
     st.markdown('<div class="side-label">TRY A QUESTION</div>', unsafe_allow_html=True)
     for k, (label, q) in enumerate(EXAMPLES):
         if st.button(label, key=f"ex_{k}", help=q):
