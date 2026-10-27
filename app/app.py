@@ -66,12 +66,29 @@ Data (Databricks SQL, catalog.schema = {GOLD}):
 READ_ONLY = re.compile(r"^\s*(SELECT|WITH)\b", re.IGNORECASE)
 
 
+@st.cache_resource  # one connection for the whole app, so the browser login happens once
 def connect():
     """Open a Databricks SQL connection: token if one is set (hosted app), else browser login (laptop)."""
     args = dict(server_hostname=st.secrets["DATABRICKS_HOST"], http_path=st.secrets["DATABRICKS_HTTP_PATH"])
     if st.secrets.get("DATABRICKS_TOKEN"):
         return sql.connect(**args, access_token=st.secrets["DATABRICKS_TOKEN"])
     return sql.connect(**args, auth_type="databricks-oauth")
+
+
+def query_rows(statement):
+    """Run a query on the shared connection; if the connection has gone stale, reconnect once."""
+    for attempt in range(2):
+        conn = connect()
+        try:
+            with conn.cursor() as cur:
+                cur.execute(statement)
+                cols = [c[0] for c in cur.description]
+                return [dict(zip(cols, r)) for r in cur.fetchmany(MAX_ROWS)]
+        except Exception as e:
+            if attempt == 0 and not conn.open:
+                connect.clear()  # drop the dead connection and log in again
+                continue
+            raise e
 
 
 @beta_tool
@@ -87,10 +104,7 @@ def run_sql(query: str) -> str:
     log = {"sql": statement}
     st.session_state.queries.append(log)
     try:
-        with connect() as conn, conn.cursor() as cur:
-            cur.execute(statement)
-            cols = [c[0] for c in cur.description]
-            rows = [dict(zip(cols, r)) for r in cur.fetchmany(MAX_ROWS)]
+        rows = query_rows(statement)
     except Exception as e:  # return the error so Claude can fix its SQL
         log["error"] = str(e)
         return f"Error: {e}"
