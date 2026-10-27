@@ -120,6 +120,7 @@ header[data-testid="stHeader"] { background: transparent; }
         border: 1px solid var(--line); border-radius: 999px; padding: .28rem .8rem; background: rgba(45,212,191,.06); }
 .chip.hot { color: var(--coral); border-color: var(--coral); background: rgba(255,90,60,.08); }
 .arrow { color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+.chart-title { font-family: 'Space Grotesk', sans-serif; font-size: 1.05rem; font-weight: 500; color: #f4f6fb; margin: 1rem 0 .2rem; }
 .side-label { font-family: 'JetBrains Mono', monospace; font-size: .72rem; letter-spacing: .2em; color: var(--muted); margin: .4rem 0 .6rem; }
 [data-testid="stChatMessage"] { background: rgba(255,255,255,.025); border: 1px solid var(--line); border-radius: 16px; padding: 1rem 1.2rem; }
 [data-testid="stChatInput"] textarea { font-family: 'Inter', sans-serif; }
@@ -219,8 +220,10 @@ def show_chart(query_number: int, chart_type: str, x: str, y: str, color: str = 
 
 def draw_chart(spec, key):
     """Render a chart spec with the dark theme; a dropdown lets the viewer switch chart type."""
-    chart_type = st.selectbox("Chart type", CHART_TYPES, index=CHART_TYPES.index(spec["type"]),
-                              key=key, label_visibility="collapsed")
+    head, pick = st.columns([4, 1], vertical_alignment="bottom")
+    head.markdown(f'<div class="chart-title">{spec["title"]}</div>', unsafe_allow_html=True)
+    chart_type = pick.selectbox("Chart type", CHART_TYPES, index=CHART_TYPES.index(spec["type"]),
+                                key=key, label_visibility="collapsed")
     df = pd.DataFrame(spec["rows"])
     x, y, color = spec["x"], spec["y"], spec["color"]
     df[x] = df[x].astype(str)
@@ -239,15 +242,13 @@ def draw_chart(spec, key):
         elif chart_type == "bar":
             enc["x"] = alt.X(f"{x}:N", title=None, sort="-y", axis=alt.Axis(labelAngle=-30))
     chart = (chart.encode(**enc)
-             .properties(height=380, background="transparent",
-                         title=alt.Title(spec["title"].upper(), anchor="start", color="#8b93a7",
-                                         font="JetBrains Mono", fontSize=11, fontWeight=600))
+             .properties(height=380, background="transparent")
              .configure_view(stroke=None)
              .configure_axis(labelColor="#8b93a7", titleColor="#8b93a7", gridColor="#1d2740",
                              domainColor="#1d2740", tickColor="#1d2740", labelFont="JetBrains Mono",
                              titleFont="JetBrains Mono", labelFontSize=11)
-             .configure_legend(labelColor="#c9cfdb", labelFont="Inter", orient="bottom", columns=5,
-                               symbolType="circle"))
+             .configure_legend(labelColor="#c9cfdb", labelFont="Inter", orient="bottom", columns=4,
+                               labelLimit=0, symbolType="circle"))
     st.altair_chart(chart, width="stretch")
 
 
