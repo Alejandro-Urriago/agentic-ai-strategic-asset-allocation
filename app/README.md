@@ -2,7 +2,7 @@
 
 Chat app where Claude answers questions about the strategic asset allocation (SAA) of the compared super funds.
 Claude writes read-only SQL on the gold layer (the metric view first), the app runs it in Databricks, and Claude answers only from the returned rows.
-Every answer shows the SQL and rows behind it, and says the figures are targets, not actual holdings.
+Every answer shows a chart (Claude picks the type and columns) and the SQL and rows behind it.
 
 ## Run on the laptop
 1. `pip install -r app/requirements.txt`
