@@ -1,0 +1,34 @@
+name: Validate dbt project
+
+# Checks the dbt project on every pull request that changes it: dbt reads all
+# models, tests and YAML files and fails on broken refs, bad YAML or Jinja errors.
+# No connection to Databricks is made, so no real credentials are needed.
+
+on:
+  pull_request:
+    paths:
+      - "dbt/**"
+      - ".github/workflows/validate-dbt-project.yml"
+  push:
+    branches: [main]
+    paths:
+      - "dbt/**"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: dbt
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dbt
+        run: pip install -r requirements.txt
+      - name: Parse dbt project
+        # dbt parse reads profiles.yml, so the token needs a value; it is never used.
+        env:
+          DBT_ACCESS_TOKEN: not-used
+        run: dbt parse --target prod --profiles-dir .
