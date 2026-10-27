@@ -104,7 +104,8 @@ CSS = """
         --coral:#ff5a3c; --teal:#2dd4bf; --amber:#f5b942; }
 .stApp { background: radial-gradient(1200px 600px at 70% -10%, #13203d 0%, var(--bg) 55%) fixed; color: var(--text); }
 html, body, .stApp, .stMarkdown, p, li, td, th { font-family: 'Inter', sans-serif; }
-#MainMenu, footer, .stDeployButton, [data-testid="stToolbar"] { display: none; }
+#MainMenu, footer, .stDeployButton, [data-testid="stAppDeployButton"], [data-testid="stMainMenu"] { display: none; }
+[data-testid="stExpandSidebarButton"], [data-testid="stSidebarCollapsedControl"] { color: var(--coral); }
 header[data-testid="stHeader"] { background: transparent; }
 [data-testid="stSidebar"] { background: #0a1020; border-right: 1px solid var(--line); }
 .kicker { font-family: 'JetBrains Mono', monospace; font-size: .78rem; letter-spacing: .22em; color: var(--muted); margin-top: .5rem; }
