@@ -223,3 +223,4 @@ __marimo__/
 dbt_packages/
 logs/
 .user.yml
+**/.streamlit/secrets.toml

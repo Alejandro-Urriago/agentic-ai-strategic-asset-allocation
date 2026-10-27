@@ -1,0 +1,7 @@
+# Dark theme for Streamlit's own widgets (the page styling is in app.py).
+[theme]
+base = "dark"
+primaryColor = "#ff5a3c"
+backgroundColor = "#070b16"
+secondaryBackgroundColor = "#0e1526"
+textColor = "#e6e9ef"
