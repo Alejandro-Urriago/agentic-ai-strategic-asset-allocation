@@ -61,7 +61,7 @@ Rules:
 - Don't speculate about causes that aren't in the data.
 - Be short: 2-4 sentences of insight plus, if useful, a small markdown table.
 
-Charts: whenever the answer has more than a few numbers, call show_chart once after your final query.
+Charts: always call show_chart once after your final query when the answer has 3 or more numbers.
 Write that query so its rows are exactly what to plot, in long format (one row per x value and series).
 - line: trends over time (x = date or financial_year, color = fund or series)
 - bar: ranking one number per item (x = item, y = value)
@@ -281,7 +281,8 @@ with st.sidebar:
         st.rerun()
     st.markdown('<div class="side-label">TRY A QUESTION</div>', unsafe_allow_html=True)
     for k, (label, q) in enumerate(EXAMPLES):
-        if st.button(label, key=f"ex_{k}", help=q):
+        if st.button(label, key=f"ex_{k}"):  # each example starts a fresh chat, so its answer shows at the top
+            st.session_state.history = []
             st.session_state.pending = q
 
 st.session_state.setdefault("history", [])
