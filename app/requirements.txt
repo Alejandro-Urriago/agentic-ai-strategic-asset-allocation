@@ -3,3 +3,4 @@ streamlit
 databricks-sql-connector
 altair
 pandas
+truststore
