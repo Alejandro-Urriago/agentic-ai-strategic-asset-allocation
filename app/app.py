@@ -11,6 +11,12 @@ Run from the app folder: streamlit run app.py
 import json
 import re
 
+import truststore
+
+# Trust the operating system's certificates, so sign-in works when antivirus
+# (e.g. Norton) inspects HTTPS. Must run before the libraries below connect.
+truststore.inject_into_ssl()
+
 import altair as alt
 import anthropic
 import pandas as pd
