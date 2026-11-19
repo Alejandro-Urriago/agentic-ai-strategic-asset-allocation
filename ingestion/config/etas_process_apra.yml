@@ -1,0 +1,99 @@
+resources:
+  jobs:
+    etas_process_apra:
+      name: etas_process_apra
+      tasks:
+        - task_key: bronze_layer
+          depends_on:
+            - task_key: etas_onboarding
+          notebook_task:
+            notebook_path: /Workspace/Users/alejandro.urriago@synechron.com.au/agentic-ai-strategic-asset-allocation/ingestion/jobs/eTAS_selective_refresh_launcher
+            base_parameters:
+              layer: bronze
+              pipeline_id: 9e2c2318-a87e-4115-80f0-04eadef916b4
+              spec_schema: adb_alejandro_research_dev_aue_ws.onboarding
+            source: WORKSPACE
+          environment_key: Default
+        - task_key: etas_onboarding
+          spark_python_task:
+            python_file: /Workspace/Users/alejandro.urriago@synechron.com.au/agentic-ai-strategic-asset-allocation/ingestion/jobs/eTAS_reporting_onboarding.py
+            parameters:
+              - --catalog
+              - adb_alejandro_research_dev_aue_ws
+              - --raw-root
+              - /Volumes/adb_alejandro_research_dev_aue_ws/landing
+          environment_key: dltmeta_env
+        - task_key: not_in_used_load_bronze_tables
+          pipeline_task:
+            pipeline_id: a5ffa9d3-b81c-46e3-a49b-9e286612a62a
+          disabled: true
+        - task_key: not_in_used_update_control_table
+          spark_python_task:
+            python_file: ingestion/jobs/update_control_table.py
+            parameters:
+              - --config-dir
+              - ingestion/config/sources
+              - --control-table
+              - adb_alejandro_research_dev_aue_ws.control.bronze_sources
+              - --raw-root
+              - /Volumes/adb_alejandro_research_dev_aue_ws/landing
+              - --updated-by
+              - alejandro
+            source: GIT
+          timeout_seconds: 900
+          environment_key: Default
+          disabled: true
+        - task_key: load_bronze_tables_selective_refresh
+          depends_on:
+            - task_key: not_in_used_update_control_table
+          spark_python_task:
+            python_file: ingestion/jobs/run_pipeline_selective_refresh.py
+            source: GIT
+          environment_key: Default
+          disabled: true
+        - task_key: build_silver_and_gold
+          depends_on:
+            - task_key: load_bronze_tables_selective_refresh
+          dbt_task:
+            project_directory: dbt
+            commands:
+              - dbt build --target prod --exclude-resource-type unit_test
+            profiles_directory: .
+            source: GIT
+          environment_key: dbt-default
+          disabled: true
+        - task_key: silver_layer
+          depends_on:
+            - task_key: bronze_layer
+          notebook_task:
+            notebook_path: /Workspace/Users/alejandro.urriago@synechron.com.au/agentic-ai-strategic-asset-allocation/ingestion/jobs/eTAS_selective_refresh_launcher
+            base_parameters:
+              layer: silver
+              pipeline_id: dde85455-555d-49e6-ab7c-84c5d1e10082
+              spec_schema: adb_alejandro_research_dev_aue_ws.onboarding
+            source: WORKSPACE
+          environment_key: Default
+      git_source:
+        git_url: https://github.com/Alejandro-Urriago/agentic-ai-strategic-asset-allocation
+        git_provider: gitHub
+        git_branch: feature/pipeline-selective-refresh
+      queue:
+        enabled: true
+      parameters:
+        - name: refresh_group
+          default: all
+      environments:
+        - environment_key: Default
+          spec:
+            environment_version: "6"
+        - environment_key: dbt-default
+          spec:
+            dependencies:
+              - dbt-databricks>=1.0.0,<2.0.0
+            environment_version: "6"
+        - environment_key: dltmeta_env
+          spec:
+            dependencies:
+              - dlt-meta==0.0.10
+            environment_version: "6"
+      performance_target: PERFORMANCE_OPTIMIZED
