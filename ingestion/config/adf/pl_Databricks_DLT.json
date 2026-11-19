@@ -1,0 +1,44 @@
+{
+    "name": "pl_Databricks_DLT",
+    "properties": {
+        "activities": [
+            {
+                "name": "Execute DLT Job",
+                "type": "WebActivity",
+                "dependsOn": [],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "method": "POST",
+                    "headers": {
+                        "Content-Type": "application/json"
+                    },
+                    "url": "https://adb-7405611227701968.8.azuredatabricks.net/api/2.1/jobs/run-now",
+                    "body": {
+                        "value": "@concat('{\"job_id\": 808412408174966, \"job_parameters\": {\"refresh_group\": \"', pipeline().parameters.refresh_group, '\"}}')",
+                        "type": "Expression"
+                    },
+                    "authentication": {
+                        "type": "MSI",
+                        "resource": "2ff814a6-3304-4ab8-85cb-cd0e6f879c1d"
+                    }
+                }
+            }
+        ],
+        "parameters": {
+            "refresh_group": {
+                "type": "string",
+                "defaultValue": "all"
+            }
+        },
+        "annotations": [],
+        "lastPublishTime": "2026-11-18T06:05:31Z"
+    },
+    "type": "Microsoft.DataFactory/factories/pipelines"
+}
