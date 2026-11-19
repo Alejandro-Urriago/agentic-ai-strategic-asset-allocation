@@ -1,0 +1,26 @@
+{
+    "name": "pl_daily_execution",
+    "properties": {
+        "activities": [
+            {
+                "name": "Execute DLT",
+                "type": "ExecutePipeline",
+                "dependsOn": [],
+                "policy": {
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "pipeline": {
+                        "referenceName": "pl_Databricks_DLT",
+                        "type": "PipelineReference"
+                    },
+                    "waitOnCompletion": true
+                }
+            }
+        ],
+        "annotations": [],
+        "lastPublishTime": "2026-11-18T06:05:32Z"
+    },
+    "type": "Microsoft.DataFactory/factories/pipelines"
+}
