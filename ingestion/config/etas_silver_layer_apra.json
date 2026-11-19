@@ -1,0 +1,25 @@
+{
+  "id": "dde85455-555d-49e6-ab7c-84c5d1e10082",
+  "pipeline_type": "WORKSPACE",
+  "name": "etas_silver_layer_apra",
+  "configuration": {
+    "layer": "silver",
+    "silver.group": "apra",
+    "silver.dataflowspecTable": "adb_alejandro_research_dev_aue_ws.onboarding.silver_dataflowspec"
+  },
+  "libraries": [
+    {
+      "notebook": {
+        "path": "/Workspace/Users/alejandro.urriago@synechron.com.au/agentic-ai-strategic-asset-allocation/ingestion/jobs/eTAS_dlt_pipeline"
+      }
+    }
+  ],
+  "schema": "curated",
+  "continuous": false,
+  "development": false,
+  "photon": true,
+  "channel": "CURRENT",
+  "catalog": "adb_alejandro_research_dev_aue_ws",
+  "serverless": true,
+  "root_path": "/Workspace/Users/alejandro.urriago@synechron.com.au/agentic-ai-strategic-asset-allocation/ingestion/jobs"
+}
