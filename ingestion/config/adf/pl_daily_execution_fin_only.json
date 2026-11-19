@@ -1,0 +1,35 @@
+{
+    "name": "pl_daily_execution_fin_only",
+    "properties": {
+        "activities": [
+            {
+                "name": "Execute DLT",
+                "type": "ExecutePipeline",
+                "dependsOn": [],
+                "policy": {
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "pipeline": {
+                        "referenceName": "pl_Databricks_DLT",
+                        "type": "PipelineReference"
+                    },
+                    "waitOnCompletion": true,
+                    "parameters": {
+                        "refresh_group": "finance_daily"
+                    }
+                }
+            }
+        ],
+        "parameters": {
+            "refresh_group": {
+                "type": "string",
+                "defaultValue": "all"
+            }
+        },
+        "annotations": [],
+        "lastPublishTime": "2026-11-18T06:05:32Z"
+    },
+    "type": "Microsoft.DataFactory/factories/pipelines"
+}
