@@ -1,7 +1,7 @@
 -- Gold: superannuation funds compared in the project.
 -- Current version of each fund only (one row per fund).
--- A view on the history table fund_snapshot (SCD Type 2), so no data is copied.
-{{ config(materialized='view') }}
+-- Built as a table from the history table fund_snapshot (SCD Type 2), rebuilt on every run,
+-- so it allows primary and foreign keys (needed for the star schema diagram in Databricks).
 
 select
     fund_key,
@@ -11,4 +11,4 @@ select
     fund_type,
     dbt_valid_from as valid_from
 from {{ ref('fund_snapshot') }}
-where dbt_valid_to is null   -- current version only; full history is in fund_snapshot
+where dbt_valid_to is null   -- current version only; full history is in fund_snapshot

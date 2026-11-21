@@ -3,23 +3,41 @@ version: 2
 # Gold tables: the business tables Genie and the AI agent answer questions from.
 # Descriptions are copied into Databricks (Unity Catalog), so Genie can read them.
 # Gold shows the current version only; full history (SCD Type 2) is in the snapshots schema.
+#
+# Star schema keys: every gold table has a contract (each column's name and data type is fixed),
+# so dbt can add primary keys (dimensions) and foreign keys (fact to dimensions) in Databricks.
+# Databricks uses these keys to draw the Entity Relationship Diagram (Catalog > fact table > View relationships).
+# Databricks does not enforce primary and foreign keys (labels only), so the unique and
+# relationships tests below still check the data.
 models:
   - name: dim_fund
     description: Superannuation funds compared in the project. One row per fund.
+    config:
+      contract: {enforced: true}
     columns:
       - name: fund_key
         description: Unique ID of the fund.
+        data_type: int
+        constraints:
+          - type: not_null
+          - type: primary_key
+            name: pk_dim_fund
         data_tests: [not_null, unique]
       - name: rse_abn
         description: Australian Business Number of the fund (RSE).
+        data_type: string
       - name: fund_name
         description: Full legal name of the fund.
+        data_type: string
       - name: short_name
         description: Short name used in reports.
+        data_type: string
       - name: fund_type
         description: "Fund type: Industry, Retail or Public_Sector."
+        data_type: string
       - name: valid_from
         description: Date this version of the fund became current. Earlier versions are in the snapshots schema.
+        data_type: timestamp
 
   - name: dim_investment_option
     description: >
@@ -27,14 +45,32 @@ models:
       Diversified = holds shares and cash/bonds, so single-theme options (e.g. property only) are excluded.
       A fund with no diversified option in a risk profile is not compared in that profile.
       Compare options by risk_profile (based on asset mix), not by option name.
+    config:
+      contract: {enforced: true}
     columns:
       - name: investment_option_key
         description: Unique ID of the investment option.
+        data_type: int
+        constraints:
+          - type: not_null
+          - type: primary_key
+            name: pk_dim_investment_option
         data_tests: [not_null, unique]
+      - name: investment_option_id
+        description: ID of the option in the APRA files.
+        data_type: string
       - name: investment_option_name
         description: Name the fund gives the option. Not a reliable guide to risk.
+        data_type: string
+      - name: investment_option_type
+        description: Type of option as reported to APRA.
+        data_type: string
+      - name: investment_option_category
+        description: Category of option as reported to APRA.
+        data_type: string
       - name: fund_key
         description: Fund that offers the option.
+        data_type: int
         data_tests:
           - not_null
           - relationships:
@@ -43,6 +79,7 @@ models:
                 field: fund_key
       - name: risk_profile
         description: Risk group based on the share of growth assets (Conservative, Balanced, Growth, High growth).
+        data_type: string
         data_tests:
           - not_null
           - accepted_values:
@@ -50,56 +87,125 @@ models:
                 values: ['Conservative', 'Balanced', 'Growth', 'High growth']
       - name: growth_assets_pct
         description: Share of growth assets (shares, half of property and alternatives), as a fraction (0.7 = 70%).
+        data_type: decimal(9,6)
       - name: defensive_assets_pct
         description: Share of defensive assets (cash, bonds, half of property and alternatives), as a fraction.
+        data_type: decimal(9,6)
       - name: total_member_assets
         description: Total member money in the option, in Australian dollars (June 2026).
+        data_type: bigint
       - name: valid_from
         description: Date this version of the option became current. Earlier versions are in the snapshots schema.
+        data_type: timestamp
 
   - name: dim_asset_class
     description: Asset classes (cash, shares, property...). One row per asset class.
+    config:
+      contract: {enforced: true}
     columns:
       - name: asset_class_key
         description: Unique ID of the asset class.
+        data_type: int
+        constraints:
+          - type: not_null
+          - type: primary_key
+            name: pk_dim_asset_class
         data_tests: [not_null, unique]
+      - name: asset_class_name
+        description: Name of the asset class.
+        data_type: string
       - name: sector_l1
         description: Main sector used for comparisons, e.g. cash, fixed_income, equity.
+        data_type: string
+      - name: sub_sector_l2
+        description: More detailed sector within sector_l1.
+        data_type: string
       - name: listing_type
         description: >
           listed, unlisted (private) or unspecified (fund did not say). Listed equity = sector_l1 'equity'
           and listing_type <> 'unlisted', so unspecified is included.
+        data_type: string
       - name: domicile_type
         description: >
           australian, international or unspecified (fund reported equity without an Australian/international split).
           Show unspecified as its own group; never merge it into australian or international.
+        data_type: string
       - name: economy_type
         description: >
           For international assets: developed, emerging or unspecified (fund did not split developed/emerging).
           Show unspecified as its own group; never treat it as developed.
+        data_type: string
+      - name: hedging_status
+        description: Whether the currency exposure is hedged, where reported.
+        data_type: string
+      - name: measure_type
+        description: What the value measures, as reported to APRA.
+        data_type: string
+      - name: parent_asset_class
+        description: Higher-level asset class this one belongs to.
+        data_type: string
       - name: is_overlay
         description: True for currency exposure. Excluded when checking that allocations add up to 100%.
+        data_type: boolean
+      - name: source_system
+        description: APRA file the asset class comes from.
+        data_type: string
+      - name: source_column
+        description: Column in the APRA file the asset class comes from.
+        data_type: string
+      - name: saa_sector_type
+        description: Sector group used in the strategic asset allocation file.
+        data_type: string
       - name: valid_from
         description: Date this version of the asset class became current. Earlier versions are in the snapshots schema.
+        data_type: timestamp
 
   - name: dim_date
     description: Calendar, one row per day, covering every Australian financial year (1 July to 30 June) with data.
+    config:
+      contract: {enforced: true}
     columns:
       - name: date_key
         description: The date.
+        data_type: date
+        constraints:
+          - type: not_null
+          - type: primary_key
+            name: pk_dim_date
         data_tests: [not_null, unique]
+      - name: calendar_year
+        description: Calendar year (January to December).
+        data_type: int
+      - name: calendar_quarter
+        description: Calendar quarter (1 = January to March).
+        data_type: int
+      - name: month_number
+        description: Month number (1 = January).
+        data_type: int
+      - name: month_name
+        description: Month name, e.g. June.
+        data_type: string
       - name: financial_year
         description: Australian financial year, named by the year it ends (1 July 2025 to 30 June 2026 = 2026).
+        data_type: int
       - name: financial_quarter
         description: Quarter of the financial year (1 = July to September).
+        data_type: int
       - name: is_quarter_end
         description: True on the last day of each quarter (when APRA data is reported).
+        data_type: boolean
 
   - name: fact_investment_strategic_allocation
     description: >
       Strategic asset allocation: each option's board-approved target mix, not actual holdings.
       Latest value only: one row per date, investment option and asset class. Keeps all options;
       join to dim_investment_option to compare the selected options.
+    config:
+      contract: {enforced: true}
+    constraints:
+      - type: primary_key   # one row per date, investment option and asset class
+        name: pk_fact_investment_strategic_allocation
+        columns: [date_key, investment_option_key, asset_class_key]
     data_tests:
       - unique:   # the combination of date, option and asset class is never repeated
           arguments:
@@ -107,6 +213,13 @@ models:
     columns:
       - name: date_key
         description: Quarter-end date of the target.
+        data_type: date
+        constraints:
+          - type: not_null
+          - type: foreign_key
+            name: fk_fact_date
+            to: ref('dim_date')
+            to_columns: [date_key]
         data_tests:
           - not_null
           - relationships:
@@ -115,6 +228,13 @@ models:
                 field: date_key
       - name: fund_key
         description: Fund that offers the option.
+        data_type: int
+        constraints:
+          - type: not_null
+          - type: foreign_key
+            name: fk_fact_fund
+            to: ref('dim_fund')
+            to_columns: [fund_key]
         data_tests:
           - not_null
           - relationships:
@@ -123,9 +243,23 @@ models:
                 field: fund_key
       - name: investment_option_key
         description: Investment option. Only the compared options are in dim_investment_option (by design).
+        data_type: int
+        constraints:
+          - type: not_null
+          - type: foreign_key   # label only: the fact keeps all options, the dimension only the compared ones
+            name: fk_fact_investment_option
+            to: ref('dim_investment_option')
+            to_columns: [investment_option_key]
         data_tests: [not_null]
       - name: asset_class_key
         description: Asset class.
+        data_type: int
+        constraints:
+          - type: not_null
+          - type: foreign_key
+            name: fk_fact_asset_class
+            to: ref('dim_asset_class')
+            to_columns: [asset_class_key]
         data_tests:
           - not_null
           - relationships:
@@ -134,9 +268,13 @@ models:
                 field: asset_class_key
       - name: benchmark_allocation_pct
         description: Target share of the option in this asset class, as a fraction (0.25 = 25%).
+        data_type: decimal(9,6)
       - name: currency_hedging_ratio_pct
         description: Share of the foreign currency exposure that is hedged, as a fraction.
+        data_type: decimal(9,6)
       - name: _ingested_at
         description: When the row was loaded into Databricks (audit).
+        data_type: timestamp
       - name: valid_from
-        description: Date this version of the target value became current. Earlier versions are in the snapshots schema.
+        description: Date this version of the target value became current. Earlier versions are in the snapshots schema.
+        data_type: timestamp

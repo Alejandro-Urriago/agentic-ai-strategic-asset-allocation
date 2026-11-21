@@ -2,8 +2,8 @@
 -- The largest diversified option (holds shares and cash/bonds) per fund and risk profile. Risk profile comes from the
 -- option's asset mix (growth %), not its name.
 -- Current version of each option only (one row per option).
--- A view on the history table investment_option_snapshot (SCD Type 2), so no data is copied.
-{{ config(materialized='view') }}
+-- Built as a table from the history table investment_option_snapshot (SCD Type 2), rebuilt on every run,
+-- so it allows primary and foreign keys (needed for the star schema diagram in Databricks).
 
 select
     investment_option_key,
