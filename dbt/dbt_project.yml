@@ -20,5 +20,5 @@ models:
       +materialized: view   # silver: views
       +schema: silver       # production area (on the laptop: dev_alejandro)
     marts:
-      +materialized: table  # gold: tables (the SCD Type 2 files override this with view)
-      +schema: gold         # production area (on the laptop: dev_alejandro)
+      +materialized: table  # gold: tables (read the latest rows from the snapshots)
+      +schema: gold         # production area (on the laptop: dev_alejandro)

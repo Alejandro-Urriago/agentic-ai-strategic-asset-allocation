@@ -1,7 +1,7 @@
 -- Gold: asset classes (cash, shares, property...).
 -- Current version of each asset class only (one row per asset class).
--- A view on the history table asset_class_snapshot (SCD Type 2), so no data is copied.
-{{ config(materialized='view') }}
+-- Built as a table from the history table asset_class_snapshot (SCD Type 2), rebuilt on every run,
+-- so it allows primary and foreign keys (needed for the star schema diagram in Databricks).
 
 select
     asset_class_key,
@@ -20,4 +20,4 @@ select
     saa_sector_type,
     dbt_valid_from as valid_from
 from {{ ref('asset_class_snapshot') }}
-where dbt_valid_to is null   -- current version only; full history is in asset_class_snapshot
+where dbt_valid_to is null   -- current version only; full history is in asset_class_snapshot
